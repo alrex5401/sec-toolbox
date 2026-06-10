@@ -1,0 +1,317 @@
+/* 仆洛宅 sec-toolbox 共用品牌樣式 — 沿用 brand-cards/CIS.md（水彩淺色、藍粉暈染） */
+
+:root {
+  --bg-base: #f5f3ec;
+  --ink: #374561;
+  --sub: #828a9c;
+  --accent: #5a6a93;
+  --kicker: #7d6f8c;
+  --pink: #f1d9df;
+  --blue: #dfe6f2;
+  --card-bg: rgba(255, 255, 255, 0.72);
+  --card-border: rgba(90, 106, 147, 0.14);
+  --good: #4f8a6d;
+  --warn: #b3823f;
+  --bad: #b05656;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "PingFang TC", "Noto Sans TC", sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  background:
+    radial-gradient(120% 90% at 18% 12%, #dfe6f2 0%, transparent 55%),
+    radial-gradient(100% 85% at 88% 85%, #f1d9df 0%, transparent 52%),
+    linear-gradient(135deg, #f5f3ec, #eef0ef);
+  background-attachment: fixed;
+  line-height: 1.75;
+}
+
+.page {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 28px 20px 64px;
+  position: relative;
+}
+
+/* ── 頁首：品牌列 ───────────────────────── */
+.brand-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.brand-bar .avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  filter: drop-shadow(0 2px 6px rgba(55, 69, 97, 0.25));
+}
+
+.brand-bar .names { line-height: 1.35; }
+
+.brand-bar .brand-name {
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  font-size: 1.05rem;
+}
+
+.brand-bar .brand-sub {
+  font-weight: 400;
+  color: var(--sub);
+  font-size: 0.82rem;
+}
+
+.brand-watermark {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  width: 110px;
+  opacity: 0.92;
+  pointer-events: none;
+}
+
+.kicker {
+  color: var(--kicker);
+  font-size: 0.82rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  margin: 26px 0 4px;
+}
+
+h1 {
+  font-size: 1.7rem;
+  font-weight: 800;
+  margin: 0 0 6px;
+  letter-spacing: 0.04em;
+}
+
+.lede { color: var(--sub); margin: 0 0 26px; font-size: 0.95rem; }
+
+h2 {
+  font-size: 1.12rem;
+  font-weight: 800;
+  margin: 34px 0 10px;
+  letter-spacing: 0.06em;
+}
+
+a { color: var(--accent); }
+
+/* ── 卡片 ───────────────────────── */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 18px rgba(55, 69, 97, 0.07);
+  backdrop-filter: blur(4px);
+}
+
+.card + .card { margin-top: 18px; }
+
+/* hub 工具卡片網格 */
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.tool-card {
+  display: block;
+  text-decoration: none;
+  color: var(--ink);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: 20px 22px;
+  box-shadow: 0 4px 18px rgba(55, 69, 97, 0.07);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tool-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(55, 69, 97, 0.13);
+}
+
+.tool-card .tool-emoji { font-size: 1.6rem; }
+
+.tool-card h3 { margin: 8px 0 6px; font-size: 1.02rem; letter-spacing: 0.05em; }
+
+.tool-card p { margin: 0; color: var(--sub); font-size: 0.86rem; line-height: 1.6; }
+
+.tool-card.placeholder {
+  opacity: 0.55;
+  border-style: dashed;
+  pointer-events: none;
+}
+
+/* ── 表單元件 ───────────────────────── */
+label { font-size: 0.88rem; color: var(--sub); }
+
+input[type="password"], input[type="text"], textarea {
+  font-family: inherit;
+  width: 100%;
+  font-size: 1rem;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  outline: none;
+}
+
+input:focus, textarea:focus { border-color: var(--accent); }
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.88rem;
+}
+
+button:hover { border-color: var(--accent); color: var(--accent); }
+
+/* metric 按鈕組（CVSS） */
+.metric-row { margin: 10px 0; }
+
+.metric-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.metric-name .hint { font-weight: 400; color: var(--sub); font-size: 0.8rem; }
+
+.opt-group { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.opt-group button {
+  padding: 6px 12px;
+  font-size: 0.84rem;
+  border-radius: 999px;
+}
+
+.opt-group button.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* ── 分數顯示 ───────────────────────── */
+.score-display {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin: 14px 0 4px;
+}
+
+.score-num { font-size: 2.4rem; font-weight: 800; }
+
+.severity-pill {
+  border-radius: 999px;
+  padding: 3px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--sub);
+}
+
+.sev-none { background: #9aa1ad; }
+.sev-low { background: #4f8a6d; }
+.sev-medium { background: #b3823f; }
+.sev-high { background: #b05656; }
+.sev-critical { background: #7c3a55; }
+
+/* 強度條（密碼） */
+.strength-bar {
+  display: flex;
+  gap: 5px;
+  margin: 12px 0 6px;
+}
+
+.strength-bar span {
+  flex: 1;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(55, 69, 97, 0.12);
+  transition: background 0.2s ease;
+}
+
+.vector-out {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.82rem;
+  background: rgba(55, 69, 97, 0.06);
+  border-radius: 10px;
+  padding: 10px 12px;
+  word-break: break-all;
+  margin: 10px 0;
+}
+
+/* tabs */
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+
+.tabs button { border-radius: 999px; padding: 7px 18px; }
+
+.tabs button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 700;
+}
+
+/* note 區塊 */
+.note {
+  border-left: 3px solid var(--accent);
+  background: rgba(223, 230, 242, 0.45);
+  border-radius: 0 12px 12px 0;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  margin: 14px 0;
+}
+
+.privacy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--accent);
+  background: rgba(223, 230, 242, 0.6);
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin-bottom: 14px;
+}
+
+ul { padding-left: 1.3em; }
+li { margin: 4px 0; }
+
+footer {
+  margin-top: 48px;
+  color: var(--sub);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--card-border);
+  padding-top: 18px;
+}
+
+footer a { color: var(--sub); }
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+
+@media (max-width: 560px) {
+  .brand-watermark { width: 80px; }
+  h1 { font-size: 1.4rem; }
+}
