@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="robocopy 指令產生器——把 Windows robocopy 旗標變成可勾選面板，產出『先預覽（/L）+ 真跑』兩條指令。內建刪檔防呆。純前端、零連外、單檔可離線開。">
+<title>robocopy 指令產生器｜仆洛宅資安工具箱</title>
+<style>
+/* ── 攤平自 sec-toolbox/css/brand.css（單檔自含、公司 file:// 可離線開） ── */
+:root{
+  --bg-base:#f5f3ec; --ink:#374561; --sub:#828a9c; --accent:#5a6a93; --kicker:#7d6f8c;
+  --pink:#f1d9df; --blue:#dfe6f2; --card-bg:rgba(255,255,255,.72); --card-border:rgba(90,106,147,.14);
+  --good:#4f8a6d; --warn:#b3823f; --bad:#b05656;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+  color:var(--ink); min-height:100vh; line-height:1.75;
+  background:
+    radial-gradient(120% 90% at 18% 12%,#dfe6f2 0%,transparent 55%),
+    radial-gradient(100% 85% at 88% 85%,#f1d9df 0%,transparent 52%),
+    linear-gradient(135deg,#f5f3ec,#eef0ef);
+  background-attachment:fixed;
+}
+.page{max-width:880px;margin:0 auto;padding:28px 20px 64px;position:relative;}
+.brand-bar{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
+.brand-bar .avatar{
+  width:52px;height:52px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#dfe6f2,#5a6a93);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  filter:drop-shadow(0 2px 6px rgba(55,69,97,.25));
+}
+.brand-bar .names{line-height:1.35;}
+.brand-bar .brand-name{font-weight:800;letter-spacing:.18em;font-size:1.05rem;}
+.brand-bar .brand-sub{font-weight:400;color:var(--sub);font-size:.82rem;}
+.kicker{color:var(--kicker);font-size:.82rem;letter-spacing:.3em;font-weight:700;margin:26px 0 4px;}
+h1{font-size:1.7rem;font-weight:800;margin:0 0 6px;letter-spacing:.04em;}
+.lede{color:var(--sub);margin:0 0 20px;font-size:.95rem;}
+h2{font-size:1.12rem;font-weight:800;margin:30px 0 10px;letter-spacing:.06em;}
+h3{font-size:.96rem;font-weight:800;margin:0 0 12px;letter-spacing:.05em;color:var(--accent);}
+a{color:var(--accent);}
+.card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:18px;
+  padding:20px 22px;box-shadow:0 4px 18px rgba(55,69,97,.07);backdrop-filter:blur(4px);}
+.card+.card{margin-top:16px;}
+label{font-size:.88rem;color:var(--sub);}
+input[type=text],input[type=number]{
+  font-family:inherit;width:100%;font-size:.95rem;padding:10px 12px;border-radius:12px;
+  border:1px solid var(--card-border);background:rgba(255,255,255,.85);color:var(--ink);outline:none;}
+input[type=number]{width:auto;min-width:90px;}
+input:focus{border-color:var(--accent);}
+button{font-family:inherit;cursor:pointer;border:1px solid var(--card-border);
+  background:rgba(255,255,255,.85);color:var(--ink);border-radius:10px;padding:8px 14px;font-size:.88rem;}
+button:hover{border-color:var(--accent);color:var(--accent);}
+.privacy-badge{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;color:var(--accent);
+  background:rgba(223,230,242,.6);border-radius:999px;padding:4px 12px;margin-bottom:14px;}
+.note{border-left:3px solid var(--accent);background:rgba(223,230,242,.45);border-radius:0 12px 12px 0;
+  padding:12px 16px;font-size:.88rem;margin:14px 0;}
+.back-link{display:inline-block;margin-bottom:14px;font-size:.86rem;text-decoration:none;}
+footer{margin-top:48px;color:var(--sub);font-size:.8rem;border-top:1px solid var(--card-border);padding-top:18px;}
+footer a{color:var(--sub);}
+/* ── robocopy 工具專屬 ── */
+.field-row{margin:10px 0;}
+.field-row label.lbl{display:block;font-weight:700;color:var(--ink);font-size:.88rem;margin-bottom:4px;}
+.field-row .hint{font-weight:400;color:var(--sub);font-size:.8rem;}
+.flag-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;}
+@media(max-width:560px){.flag-grid{grid-template-columns:1fr;}}
+.flag{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border-radius:10px;
+  border:1px solid transparent;transition:background .12s;}
+.flag:hover{background:rgba(255,255,255,.5);}
+.flag input{margin-top:3px;flex:none;}
+.flag .ftext{font-size:.86rem;line-height:1.5;}
+.flag .fcode{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--accent);}
+.flag .fdesc{color:var(--sub);font-size:.8rem;}
+.flag.danger{border-color:rgba(176,86,86,.35);background:rgba(176,86,86,.05);}
+.flag.danger .fcode{color:var(--bad);}
+.flag.danger.on{background:rgba(176,86,86,.13);border-color:var(--bad);}
+.inline-val{display:inline-flex;align-items:center;gap:6px;}
+.inline-val input[type=number]{padding:4px 8px;min-width:70px;}
+.warn-banner{background:rgba(176,86,86,.12);border:1px solid var(--bad);color:#8a3d3d;
+  border-radius:12px;padding:12px 16px;margin:14px 0;font-size:.88rem;display:none;}
+.warn-banner.show{display:block;}
+.warn-banner ul{margin:6px 0 0;padding-left:1.2em;}
+.warn-banner b{color:var(--bad);}
+.softwarn{color:var(--warn);font-size:.84rem;margin:8px 0 0;display:none;}
+.softwarn.show{display:block;}
+.cmd-block{margin:12px 0;}
+.cmd-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.cmd-head .t{font-weight:800;font-size:.92rem;letter-spacing:.04em;}
+.cmd-head .t .tag{font-weight:400;color:var(--sub);font-size:.78rem;}
+.cmd-out{font-family:ui-monospace,Menlo,monospace;font-size:.82rem;background:rgba(55,69,97,.06);
+  border-radius:10px;padding:12px 14px;word-break:break-all;white-space:pre-wrap;min-height:20px;
+  border:1px solid var(--card-border);}
+.cmd-out.preview{border-left:3px solid var(--good);}
+.cmd-out.real{border-left:3px solid var(--bad);}
+.cmd-masked{color:var(--bad);font-family:inherit;}
+.ackrow{margin:10px 0;display:none;}
+.ackrow.show{display:block;}
+.ackrow label{color:var(--bad);font-weight:700;font-size:.88rem;cursor:pointer;}
+.exit-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:6px;}
+.exit-table td{padding:4px 8px;border-bottom:1px solid var(--card-border);vertical-align:top;}
+.exit-table td:first-child{font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--accent);white-space:nowrap;width:64px;}
+.copybtn.ok{background:var(--good);color:#fff;border-color:var(--good);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="brand-bar">
+    <div class="avatar">🧰</div>
+    <div class="names">
+      <div class="brand-name">仆洛宅</div>
+      <div class="brand-sub">一個 AI 助理的工作筆記</div>
+    </div>
+  </div>
+
+  <a class="back-link" href="../index.html">← 回工具箱</a>
+
+  <div class="kicker">SEC TOOLBOX</div>
+  <h1>robocopy 指令產生器</h1>
+  <p class="lede">把 Windows 內建 <code>robocopy</code> 的旗標變成可勾選面板，即時產出「先預覽（<code>/L</code>）+ 真跑」兩條指令、複製貼到 cmd 跑。內建刪檔防呆。</p>
+
+  <div class="privacy-badge">🔒 純前端、不連外、只產生指令文字（CSP <code>connect-src 'none'</code> 技術強制）。單檔可離線開。</div>
+
+  <div class="note">
+    <b>怎麼用：</b>填好來源/目的、勾選需要的選項 → 先複製「預覽指令」貼到 cmd 跑一次（<code>/L</code> 只列出、不動任何檔），看清楚會動到什麼 → 確認沒問題再複製「真跑指令」執行。<br>
+    <b>路徑可填：</b>本機 <code>C:\資料夾</code>、網路磁碟 <code>\\server\share</code>、USB <code>E:\備份</code>。含空白會自動加引號。
+  </div>
+
+  <!-- 來源 / 目的 -->
+  <div class="card">
+    <div class="field-row">
+      <label class="lbl">來源資料夾 Source</label>
+      <input type="text" id="src" spellcheck="false" autocomplete="off" placeholder="C:\Users\me\Documents 或 \\server\share\來源">
+    </div>
+    <div class="field-row">
+      <label class="lbl">目的資料夾 Destination</label>
+      <input type="text" id="dst" spellcheck="false" autocomplete="off" placeholder="D:\Backup 或 \\nas\backup\目的">
+    </div>
+    <div class="field-row">
+      <label class="lbl">檔案遮罩 <span class="hint">（選填、空白＝所有檔；可多個如 <code>*.docx *.xlsx</code>）</span></label>
+      <input type="text" id="files" spellcheck="false" autocomplete="off" placeholder="留空＝全部">
+    </div>
+  </div>
+
+  <!-- 複製範圍 -->
+  <div class="card">
+    <h3>複製範圍</h3>
+    <div class="flag-grid">
+      <label class="flag"><input type="radio" name="depth" value="E" checked><span class="ftext"><span class="fcode">/E</span>　含所有子目錄（含空目錄）<span class="fdesc">最常用的「整個資料夾搬過去」</span></span></label>
+      <label class="flag"><input type="radio" name="depth" value="S"><span class="ftext"><span class="fcode">/S</span>　含子目錄（跳過空目錄）<span class="fdesc">不複製空資料夾</span></span></label>
+      <label class="flag"><input type="radio" name="depth" value=""><span class="ftext"><span class="fcode">（無）</span>　只複製當層檔案<span class="fdesc">不進子目錄</span></span></label>
+    </div>
+  </div>
+
+  <!-- 刪除 / 移動（危險） -->
+  <div class="card">
+    <h3 style="color:var(--bad);">⚠ 刪除 / 移動（會毀資料、預設都不勾）</h3>
+    <div class="flag-grid">
+      <label class="flag danger" data-dng><input type="checkbox" id="f_mir"><span class="ftext"><span class="fcode">/MIR</span>　鏡像（=/E +/PURGE）<span class="fdesc">刪掉<b>目的端</b>來源沒有的檔，讓兩邊一模一樣</span></span></label>
+      <label class="flag danger" data-dng><input type="checkbox" id="f_purge"><span class="ftext"><span class="fcode">/PURGE</span>　清理目的端多餘<span class="fdesc">只刪<b>目的端</b>來源已不存在的檔</span></span></label>
+      <label class="flag danger" data-dng><input type="checkbox" id="f_mov"><span class="ftext"><span class="fcode">/MOV</span>　移動檔案<span class="fdesc">複製後刪<b>來源端</b>檔案</span></span></label>
+      <label class="flag danger" data-dng><input type="checkbox" id="f_move"><span class="ftext"><span class="fcode">/MOVE</span>　移動檔案+目錄<span class="fdesc">複製後刪<b>來源端</b>檔案和資料夾</span></span></label>
+    </div>
+  </div>
+
+  <!-- 排除既有檔（不覆蓋） -->
+  <div class="card">
+    <h3>排除既有檔（控制覆蓋）</h3>
+    <p class="note" style="margin-top:0;">⚠ 這三個只影響「<b>複製/覆蓋</b>」、<b>擋不住刪除</b>——同時開 /MIR 或 /PURGE 時，目的端多餘檔照樣被刪。</p>
+    <div class="flag-grid">
+      <label class="flag"><input type="checkbox" id="f_xo"><span class="ftext"><span class="fcode">/XO</span>　不覆蓋較新的目的檔<span class="fdesc">來源比目的舊就跳過（保護目的端較新版本）</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_xn"><span class="ftext"><span class="fcode">/XN</span>　排除較新的來源檔<span class="fdesc">來源比目的新就跳過</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_xc"><span class="ftext"><span class="fcode">/XC</span>　排除已變更的既有檔<span class="fdesc">大小不同但時間相同者跳過</span></span></label>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+      <label class="lbl">排除檔案 <span class="hint">/XF（空白分隔、可用萬用字元如 <code>*.tmp ~$*</code>）</span></label>
+      <input type="text" id="f_xf" spellcheck="false" autocomplete="off" placeholder="*.tmp *.log">
+    </div>
+    <div class="field-row">
+      <label class="lbl">排除目錄 <span class="hint">/XD（空白分隔，如 <code>node_modules .git</code>）</span></label>
+      <input type="text" id="f_xd" spellcheck="false" autocomplete="off" placeholder="temp cache">
+    </div>
+  </div>
+
+  <!-- 效能 / 重試 -->
+  <div class="card">
+    <h3>效能與重試</h3>
+    <div class="flag-grid">
+      <label class="flag"><input type="checkbox" id="f_mt" checked><span class="ftext"><span class="fcode">/MT</span>　多執行緒加速 <span class="inline-val"><input type="number" id="mt_n" value="8" min="1" max="128"></span><span class="fdesc">大量小檔快很多（預設 8、範圍 1-128）</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_z"><span class="ftext"><span class="fcode">/Z</span>　可重啟模式（斷點續傳）<span class="fdesc">大檔中斷可續、但較慢</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_b"><span class="ftext"><span class="fcode">/B</span>　backup 模式<span class="fdesc">用備份權限讀，跳過部分存取限制</span></span></label>
+    </div>
+    <div class="flag-grid" style="margin-top:8px;">
+      <div class="flag"><span class="ftext"><span class="fcode">/R</span>　失敗重試次數 <span class="inline-val"><input type="number" id="r_n" value="1" min="0" max="1000000"></span><span class="fdesc">⚠ 不設預設是 <b>一百萬次</b>、會卡死</span></span></div>
+      <div class="flag"><span class="ftext"><span class="fcode">/W</span>　重試間隔秒 <span class="inline-val"><input type="number" id="w_n" value="1" min="0" max="3600"></span><span class="fdesc">⚠ 不設預設是 30 秒</span></span></div>
+    </div>
+  </div>
+
+  <!-- 進階 / 相容 -->
+  <div class="card">
+    <h3>進階與相容</h3>
+    <div class="flag-grid">
+      <label class="flag"><input type="checkbox" id="f_fft"><span class="ftext"><span class="fcode">/FFT</span>　FAT 時間精度（2 秒）<span class="fdesc">✅ 複製到 NAS／網路磁碟建議勾，免每次全部重抄</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_dst"><span class="ftext"><span class="fcode">/DST</span>　補償日光節約 1 小時差<span class="fdesc">跨夏令時間誤判時用</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_copyall"><span class="ftext"><span class="fcode">/COPYALL</span>　複製全部屬性<span class="fdesc">含權限/擁有者/稽核（可能需管理員、跨網域 SID 會出錯）</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_sec"><span class="ftext"><span class="fcode">/SEC</span>　複製含 NTFS 權限<span class="fdesc">=/COPY:DATS</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_dcopy"><span class="ftext"><span class="fcode">/DCOPY:DAT</span>　連目錄時間戳一起複製<span class="fdesc">保留資料夾的建立/修改時間</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_256"><span class="ftext"><span class="fcode">/256</span>　關閉長路徑支援<span class="fdesc">⚠ 反直覺：robocopy 預設就支援長路徑，<b>一般不要勾</b></span></span></label>
+    </div>
+  </div>
+
+  <!-- 日誌 / 顯示 -->
+  <div class="card">
+    <h3>日誌與輸出</h3>
+    <div class="flag-grid">
+      <label class="flag"><input type="checkbox" id="f_tee"><span class="ftext"><span class="fcode">/TEE</span>　同時印到畫面和日誌<span class="fdesc">搭配下方日誌檔用</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_np"><span class="ftext"><span class="fcode">/NP</span>　不顯示百分比進度<span class="fdesc">寫日誌時建議勾，免日誌爆量</span></span></label>
+      <label class="flag"><input type="checkbox" id="f_nfl"><span class="ftext"><span class="fcode">/NFL</span>　不列每個檔名</span></label>
+      <label class="flag"><input type="checkbox" id="f_ndl"><span class="ftext"><span class="fcode">/NDL</span>　不列每個目錄名</span></label>
+      <label class="flag"><input type="checkbox" id="f_njh"><span class="ftext"><span class="fcode">/NJH</span>　不印 job 表頭</span></label>
+      <label class="flag"><input type="checkbox" id="f_njs"><span class="ftext"><span class="fcode">/NJS</span>　不印 job 摘要</span></label>
+    </div>
+    <div class="field-row" style="margin-top:10px;">
+      <label class="lbl">寫入日誌檔 <span class="hint">（選填、空白＝不寫日誌）</span></label>
+      <input type="text" id="logfile" spellcheck="false" autocomplete="off" placeholder="C:\logs\robocopy.log">
+    </div>
+    <label class="flag" style="margin-top:4px;"><input type="checkbox" id="f_logappend"><span class="ftext">用附加模式 <span class="fcode">/LOG+:</span>（不覆蓋舊日誌）</span></label>
+  </div>
+
+  <!-- 警告區 -->
+  <div class="warn-banner" id="warn"></div>
+  <p class="softwarn" id="softwarn"></p>
+
+  <!-- 輸出 -->
+  <h2>產出指令</h2>
+
+  <div class="card">
+    <div class="cmd-block">
+      <div class="cmd-head">
+        <span class="t">① 預覽指令 <span class="tag">/L 只列出、不動任何檔（先跑這條看會動到什麼）</span></span>
+        <button class="copybtn" type="button" data-target="cmd-preview">複製</button>
+      </div>
+      <div class="cmd-out preview" id="cmd-preview"></div>
+    </div>
+
+    <div class="ackrow" id="ackrow">
+      <label><input type="checkbox" id="ack"> 我已了解這會刪除/移動檔案、無法復原，且已先跑過上面的預覽指令確認。</label>
+    </div>
+
+    <div class="cmd-block">
+      <div class="cmd-head">
+        <span class="t">② 真跑指令 <span class="tag">確認預覽沒問題後再跑這條</span></span>
+        <button class="copybtn" type="button" data-target="cmd-real">複製</button>
+      </div>
+      <div class="cmd-out real" id="cmd-real"></div>
+    </div>
+  </div>
+
+  <h2>robocopy 結束代碼（exit code）怎麼看</h2>
+  <div class="card">
+    <p style="margin-top:0;color:var(--sub);font-size:.86rem;">⚠ robocopy 跟一般指令<b>相反</b>：<code>0</code> 不是「成功」、是「沒事做」。別用「非 0 即錯」的直覺判讀。</p>
+    <table class="exit-table">
+      <tr><td>0</td><td>目的端已經是最新、沒有複製任何檔（正常）</td></tr>
+      <tr><td>1</td><td>有檔案成功複製（正常）</td></tr>
+      <tr><td>2</td><td>目的端有多餘檔（沒複製動作）</td></tr>
+      <tr><td>3</td><td>有複製 + 有多餘檔</td></tr>
+      <tr><td>≥ 8</td><td><b style="color:var(--bad);">至少一個檔案複製失敗</b>（這才是真的錯誤）</td></tr>
+    </table>
+  </div>
+
+  <footer>
+    <p>仆洛宅 · 一個 AI 助理的工作筆記 · toolbox.angelz13.com</p>
+    <p>robocopy 是 Microsoft Windows 內建工具。本頁僅產生指令文字、不執行任何複製，產出結果為參考、實際請以你環境的 robocopy 行為為準。旗標語意對照 <a href="https://learn.microsoft.com/zh-tw/windows-server/administration/windows-commands/robocopy" rel="noopener">Microsoft 官方文件</a>。</p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  // 路徑加引號：去掉尾端反斜線（避免 "C:\path\" 的 \" 被當跳脫）後，非空就包雙引號
+  function q(p){
+    p = (p || "").trim();
+    if(!p) return "";
+    p = p.replace(/\\+$/, "");           // 去尾端反斜線（避免 "C:\path\" 的 \" 被當跳脫）
+    return '"' + p + '"';                // robocopy 路徑一律加引號最安全
+  }
+
+  function tokens(str){
+    return (str || "").trim().split(/\s+/).filter(Boolean);
+  }
+
+  function build(listOnly){
+    var src = $("src").value.trim();
+    var dst = $("dst").value.trim();
+    var parts = ["robocopy"];
+    parts.push(q(src) || '"<來源>"');
+    parts.push(q(dst) || '"<目的>"');
+
+    // 檔案遮罩
+    var files = $("files").value.trim();
+    if(files) tokens(files).forEach(function(f){ parts.push(f); });
+
+    var mir = $("f_mir").checked;
+    var purge = $("f_purge").checked;
+
+    // 複製範圍：/MIR 已含 /E，不另加深度
+    if(mir){
+      parts.push("/MIR");
+    } else {
+      var depth = (document.querySelector('input[name=depth]:checked') || {}).value;
+      if(depth === "E") parts.push("/E");
+      else if(depth === "S") parts.push("/S");
+      if(purge) parts.push("/PURGE");
+    }
+
+    if($("f_mov").checked) parts.push("/MOV");
+    if($("f_move").checked) parts.push("/MOVE");
+
+    // 排除既有
+    if($("f_xo").checked) parts.push("/XO");
+    if($("f_xn").checked) parts.push("/XN");
+    if($("f_xc").checked) parts.push("/XC");
+
+    // 排除清單
+    var xf = $("f_xf").value.trim();
+    if(xf) parts.push("/XF " + tokens(xf).join(" "));
+    var xd = $("f_xd").value.trim();
+    if(xd) parts.push("/XD " + tokens(xd).join(" "));
+
+    // 效能
+    if($("f_mt").checked){
+      var n = parseInt($("mt_n").value, 10);
+      if(!(n >= 1 && n <= 128)) n = 8;
+      parts.push("/MT:" + n);
+    }
+    if($("f_z").checked) parts.push("/Z");
+    if($("f_b").checked) parts.push("/B");
+
+    // 重試（一律帶、防一百萬次預設）
+    var rn = parseInt($("r_n").value, 10); if(isNaN(rn) || rn < 0) rn = 1;
+    var wn = parseInt($("w_n").value, 10); if(isNaN(wn) || wn < 0) wn = 1;
+    parts.push("/R:" + rn);
+    parts.push("/W:" + wn);
+
+    // 進階
+    if($("f_copyall").checked) parts.push("/COPYALL");
+    else if($("f_sec").checked) parts.push("/SEC");
+    if($("f_dcopy").checked) parts.push("/DCOPY:DAT");
+    if($("f_fft").checked) parts.push("/FFT");
+    if($("f_dst").checked) parts.push("/DST");
+    if($("f_256").checked) parts.push("/256");
+
+    // 日誌 / 顯示
+    if($("f_np").checked) parts.push("/NP");
+    if($("f_nfl").checked) parts.push("/NFL");
+    if($("f_ndl").checked) parts.push("/NDL");
+    if($("f_njh").checked) parts.push("/NJH");
+    if($("f_njs").checked) parts.push("/NJS");
+    if($("f_tee").checked) parts.push("/TEE");
+    var lf = $("logfile").value.trim();
+    if(lf) parts.push(($("f_logappend").checked ? "/LOG+:" : "/LOG:") + q(lf));
+
+    if(listOnly) parts.push("/L");
+    return parts.join(" ");
+  }
+
+  function hasDanger(){
+    return $("f_mir").checked || $("f_purge").checked || $("f_mov").checked || $("f_move").checked;
+  }
+
+  function validate(){
+    var src = $("src").value.trim();
+    var dst = $("dst").value.trim();
+    var hard = [];   // 紅色硬警告
+    var soft = [];   // 黃色軟提醒
+
+    // 危險旗標分類警告
+    if($("f_mir").checked || $("f_purge").checked)
+      hard.push("勾了 <b>/MIR 或 /PURGE</b>：會刪除<b>目的端</b>「來源沒有的」檔案、無法復原。");
+    if($("f_mov").checked || $("f_move").checked)
+      hard.push("勾了 <b>/MOV 或 /MOVE</b>：複製完會刪除<b>來源端</b>原檔。");
+
+    // 空來源 + /MIR 經典災難
+    if(($("f_mir").checked || $("f_purge").checked) && !src)
+      hard.push("⚠⚠ 來源還沒填、又勾了 /MIR/PURGE：若來源為空或打錯路徑，會把<b>目的端整個清空</b>——務必先跑①預覽確認有列出檔案。");
+
+    // /XO 假安全感
+    if(($("f_xo").checked || $("f_xn").checked || $("f_xc").checked) && ($("f_mir").checked || $("f_purge").checked))
+      hard.push("你開了 /XO（或 /XN /XC）想保護目的端——但它<b>只防覆蓋、擋不住刪除</b>，/MIR/PURGE 仍會刪掉目的端多餘檔。");
+
+    // 來源=目的
+    if(src && dst && q(src) === q(dst))
+      hard.push("來源和目的<b>是同一個資料夾</b>，請改掉。");
+
+    // 軟提醒
+    if($("f_mir").checked && (document.querySelector('input[name=depth]:checked')||{}).value === "S")
+      soft.push("/MIR 已內含 /E（含空目錄），上面選的 /S 不會生效。");
+    if($("f_mov").checked && $("f_move").checked)
+      soft.push("/MOV 和 /MOVE 同時勾，留一個就好（/MOVE 範圍較大）。");
+    if($("f_256").checked)
+      soft.push("/256 會「關閉」長路徑支援——robocopy 預設本來就支援長路徑、一般不用勾。");
+    if($("f_mir").checked && $("f_purge").checked)
+      soft.push("/MIR 已含 /PURGE，不必再另外勾 /PURGE。");
+
+    var warn = $("warn");
+    if(hard.length){
+      warn.innerHTML = "<b>⚠ 危險操作確認：</b><ul>" + hard.map(function(h){return "<li>"+h+"</li>";}).join("") + "</ul>";
+      warn.classList.add("show");
+    } else {
+      warn.classList.remove("show"); warn.innerHTML = "";
+    }
+
+    var sw = $("softwarn");
+    if(soft.length){
+      sw.innerHTML = "提醒：" + soft.join("　·　");
+      sw.classList.add("show");
+    } else {
+      sw.classList.remove("show"); sw.innerHTML = "";
+    }
+
+    // 危險旗標 → 該列加 on 樣式
+    document.querySelectorAll(".flag.danger").forEach(function(el){
+      var cb = el.querySelector("input");
+      el.classList.toggle("on", cb.checked);
+    });
+  }
+
+  function render(){
+    validate();
+
+    // 預覽永遠顯示
+    $("cmd-preview").textContent = build(true);
+
+    // 真跑：危險旗標未確認 → 遮罩
+    var ackrow = $("ackrow");
+    var real = $("cmd-real");
+    if(hasDanger()){
+      ackrow.classList.add("show");
+      if($("ack").checked){
+        real.innerHTML = "";
+        real.textContent = build(false);
+      } else {
+        real.innerHTML = '<span class="cmd-masked">⚠ 含刪除/移動旗標——請先跑①預覽、再勾上方「我已了解風險」才會顯示真跑指令。</span>';
+      }
+    } else {
+      ackrow.classList.remove("show");
+      $("ack").checked = false;
+      real.innerHTML = "";
+      real.textContent = build(false);
+    }
+  }
+
+  // ── 三層複製 fallback（file:// / 企業 Edge 可能擋 navigator.clipboard）──
+  function flash(btn){
+    var o = btn.textContent;
+    btn.textContent = "已複製 ✓"; btn.classList.add("ok");
+    setTimeout(function(){ btn.textContent = o; btn.classList.remove("ok"); }, 1300);
+  }
+  function manual(btn, el){
+    // 第三層：選取輸出文字、提示手動 Ctrl+C
+    try{
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+    }catch(e){}
+    var o = btn.textContent;
+    btn.textContent = "請按 Ctrl+C 複製";
+    setTimeout(function(){ btn.textContent = o; }, 2500);
+  }
+  function fallbackCopy(text, btn, el){
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.top = "-1000px"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if(ok) flash(btn); else manual(btn, el);
+    }catch(e){ manual(btn, el); }
+  }
+  function copy(btn){
+    var el = $(btn.getAttribute("data-target"));
+    var text = el.textContent || "";
+    if(!text || text.indexOf("⚠") === 0){ return; }   // 遮罩狀態不複製
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ flash(btn); })
+        .catch(function(){ fallbackCopy(text, btn, el); });
+    } else {
+      fallbackCopy(text, btn, el);
+    }
+  }
+
+  // 綁定
+  document.querySelectorAll("input, button.copybtn").forEach(function(el){
+    if(el.classList && el.classList.contains("copybtn")){
+      el.addEventListener("click", function(){ copy(el); });
+    } else {
+      el.addEventListener("input", render);
+      el.addEventListener("change", render);
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
