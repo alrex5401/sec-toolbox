@@ -1,0 +1,12 @@
+# 舊網址（.html 形式）-> 正式網址，永久導向。
+#
+# 為什麼需要這個檔：本站沒設 html_handling，吃 Workers 預設的 auto-trailing-slash，
+# 對 .html 網址自動發的是 307（暫時性）。307 對搜尋引擎的意思是「舊網址還算數」、
+# 不轉移權重；301 才是「永久搬家」。官方沒有調整那個狀態碼的選項，只能用本檔明寫。
+#
+# 一頁一行。新增頁面時要同步加一行。
+
+/index.html           /                               301
+/tools/cvss.html      /tools/cvss                     301
+/tools/password.html  /tools/password                 301
+/tools/robocopy.html  /tools/robocopy                 301
